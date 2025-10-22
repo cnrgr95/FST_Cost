@@ -32,5 +32,13 @@
     "total_projects": "Toplam Proje",
     "active_calculations": "Aktif Hesaplama",
     "completed": "Tamamlanan",
-    "session_timeout": "Oturumunuz hareketsizlik nedeniyle sona erdi. Lütfen tekrar giriş yapın."
+    "session_timeout": "Oturumunuz hareketsizlik nedeniyle sona erdi. Lütfen tekrar giriş yapın.",
+    "new_calculation": "Yeni Hesaplama",
+    "calculation_history": "Hesaplama Geçmişi",
+    "monthly_reports": "Aylık Raporlar",
+    "annual_reports": "Yıllık Raporlar",
+    "user_list": "Kullanıcı Listesi",
+    "add_user": "Kullanıcı Ekle",
+    "system_settings": "Sistem Ayarları",
+    "quick_stats": "Hızlı İstatistikler"
 }

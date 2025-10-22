@@ -1,31 +1,15 @@
 // Dashboard JavaScript
 document.addEventListener('DOMContentLoaded', function() {
-    // Session yenileme mekanizması
-    let lastActivity = Date.now();
-    const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 saat (milisaniye)
-    
-    // Kullanıcı aktivitesini takip et
-    ['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(function(name) {
-        document.addEventListener(name, function() {
-            lastActivity = Date.now();
-        }, true);
-    });
-    
-    // Session timeout kontrolü
-    setInterval(function() {
-        const now = Date.now();
-        if (now - lastActivity > SESSION_TIMEOUT) {
-            // Session süresi dolmuş, çıkış yap
-            alert(getTranslation('session_timeout'));
-            window.location.href = 'login.php?timeout=1';
-        }
-    }, 60000); // Her dakika kontrol et
+    // Dashboard elemanlarını seç
+    const dashboardCards = document.querySelectorAll('.dashboard-card');
+    const statNumbers = document.querySelectorAll('.stat-number');
+    const mainContent = document.querySelector('.main-content');
+    const sidebar = document.querySelector('.sidebar');
     
     // Çeviri fonksiyonu
     function getTranslation(key) {
         const translations = {
             'en': {
-                'confirm_logout': 'Are you sure you want to logout?',
                 'cost_calculation_module': 'Cost calculation module will be active soon!',
                 'reports_module': 'Reports module will be active soon!',
                 'users_module': 'User management module will be active soon!',
@@ -34,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 'session_timeout': 'Your session has expired due to inactivity. Please login again.'
             },
             'tr': {
-                'confirm_logout': 'Çıkış yapmak istediğinizden emin misiniz?',
                 'cost_calculation_module': 'Maliyet hesaplama modülü yakında aktif olacak!',
                 'reports_module': 'Raporlar modülü yakında aktif olacak!',
                 'users_module': 'Kullanıcı yönetimi modülü yakında aktif olacak!',
@@ -44,15 +27,12 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         };
         
-        // Dil bilgisini HTML'den al
         const htmlLang = document.documentElement.lang || 'en';
         return translations[htmlLang] ? translations[htmlLang][key] : key;
     }
     
     // Dashboard kartlarına tıklama olayları
-    const cards = document.querySelectorAll('.card');
-    
-    cards.forEach(card => {
+    dashboardCards.forEach(card => {
         card.addEventListener('click', function() {
             // Kart tıklama animasyonu
             this.style.transform = 'scale(0.95)';
@@ -75,23 +55,62 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Çıkış butonu onayı
-    const logoutBtn = document.querySelector('.logout-btn');
-    if(logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            if(confirm(getTranslation('confirm_logout'))) {
-                window.location.href = this.href;
-            }
-        });
+    // Sidebar durumunu takip et
+    function updateMainContentMargin() {
+        if(sidebar && sidebar.classList.contains('open')) {
+            mainContent.classList.remove('sidebar-closed');
+            document.body.classList.add('sidebar-open');
+        } else {
+            mainContent.classList.add('sidebar-closed');
+            document.body.classList.remove('sidebar-open');
+        }
     }
     
-    // Sayfa yüklendiğinde animasyonlar
+    // Sidebar değişikliklerini izle
+    if(sidebar) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if(mutation.attributeName === 'class') {
+                    updateMainContentMargin();
+                }
+            });
+        });
+        
+        observer.observe(sidebar, { attributes: true });
+    }
+    
+    // Sayfa yüklendiğinde kontrol et
+    updateMainContentMargin();
+    
+    // İstatistik animasyonları
     animateStats();
     
     // Periyodik olarak istatistikleri güncelle (simülasyon)
     setInterval(updateStats, 5000);
+    
+    // Responsive kontrol
+    function handleResize() {
+        if(window.innerWidth <= 768) {
+            // Mobilde sidebar'ı kapat
+            if(sidebar) {
+                sidebar.classList.remove('open');
+            }
+            mainContent.classList.add('sidebar-closed');
+            document.body.classList.remove('sidebar-open');
+        } else {
+            // Desktop'ta sidebar'ı açık tut
+            if(sidebar) {
+                sidebar.classList.add('open');
+            }
+            mainContent.classList.remove('sidebar-closed');
+            document.body.classList.add('sidebar-open');
+        }
+    }
+    
+    window.addEventListener('resize', handleResize);
+    
+    // Sayfa yüklendiğinde kontrol et
+    handleResize();
 });
 
 function handleCardClick(cardTitle) {
@@ -166,18 +185,19 @@ function showNotification(message, type = 'info') {
     // Bildirim stilleri
     notification.style.cssText = `
         position: fixed;
-        top: 20px;
+        top: 100px;
         right: 20px;
         background: ${type === 'info' ? '#667eea' : type === 'success' ? '#28a745' : '#dc3545'};
         color: white;
         padding: 15px 20px;
         border-radius: 8px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
+        z-index: 1002;
         font-size: 14px;
         font-weight: 500;
         transform: translateX(100%);
         transition: transform 0.3s ease;
+        max-width: 300px;
     `;
     
     document.body.appendChild(notification);
@@ -191,33 +211,36 @@ function showNotification(message, type = 'info') {
     setTimeout(() => {
         notification.style.transform = 'translateX(100%)';
         setTimeout(() => {
-            document.body.removeChild(notification);
+            if(document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
         }, 300);
     }, 3000);
 }
 
-// Sayfa görünürlük değişikliği
-document.addEventListener('visibilitychange', function() {
-    if(document.hidden) {
-        // Sayfa gizlendiğinde animasyonları durdur
-        document.body.style.animationPlayState = 'paused';
-    } else {
-        // Sayfa görünür olduğunda animasyonları devam ettir
-        document.body.style.animationPlayState = 'running';
-    }
+// Session yenileme mekanizması
+let lastActivity = Date.now();
+const SESSION_TIMEOUT = 2 * 60 * 60 * 1000; // 2 saat (milisaniye)
+
+// Kullanıcı aktivitesini takip et
+['mousedown', 'mousemove', 'keypress', 'scroll', 'touchstart', 'click'].forEach(function(name) {
+    document.addEventListener(name, function() {
+        lastActivity = Date.now();
+    }, true);
 });
+
+// Session timeout kontrolü
+setInterval(function() {
+    const now = Date.now();
+    if (now - lastActivity > SESSION_TIMEOUT) {
+        // Session süresi dolmuş, çıkış yap
+        alert(getTranslation('session_timeout'));
+        window.location.href = 'login.php?timeout=1';
+    }
+}, 60000); // Her dakika kontrol et
 
 // Klavye kısayolları
 document.addEventListener('keydown', function(e) {
-    // Ctrl + Q ile çıkış
-    if(e.ctrlKey && e.key === 'q') {
-        e.preventDefault();
-        const logoutBtn = document.querySelector('.logout-btn');
-        if(logoutBtn) {
-            logoutBtn.click();
-        }
-    }
-    
     // Escape ile bildirimleri kapat
     if(e.key === 'Escape') {
         const notifications = document.querySelectorAll('.notification');
@@ -231,3 +254,22 @@ document.addEventListener('keydown', function(e) {
         });
     }
 });
+
+// CSS ekleme
+const style = document.createElement('style');
+style.textContent = `
+    .main-content {
+        transition: margin-left 0.3s ease;
+    }
+    
+    @media (max-width: 768px) {
+        .main-content {
+            margin-left: 0 !important;
+        }
+        
+        .main-content.sidebar-closed {
+            margin-left: 0 !important;
+        }
+    }
+`;
+document.head.appendChild(style);

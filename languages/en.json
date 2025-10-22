@@ -32,5 +32,13 @@
     "total_projects": "Total Projects",
     "active_calculations": "Active Calculations",
     "completed": "Completed",
-    "session_timeout": "Your session has expired due to inactivity. Please login again."
+    "session_timeout": "Your session has expired due to inactivity. Please login again.",
+    "new_calculation": "New Calculation",
+    "calculation_history": "Calculation History",
+    "monthly_reports": "Monthly Reports",
+    "annual_reports": "Annual Reports",
+    "user_list": "User List",
+    "add_user": "Add User",
+    "system_settings": "System Settings",
+    "quick_stats": "Quick Statistics"
 }
