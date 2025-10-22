@@ -137,6 +137,12 @@
             });
         }
         
+        // F11 - toggle fullscreen
+        if(e.key === 'F11') {
+            e.preventDefault();
+            window.toggleFullscreen();
+        }
+        
         // Ctrl + M - toggle sidebar
         if(e.ctrlKey && e.key === 'm') {
             e.preventDefault();
@@ -149,6 +155,12 @@
             if(typeof window.logout === 'function') {
                 window.logout();
             }
+        }
+        
+        // Ctrl + F - toggle fullscreen (alternative)
+        if(e.ctrlKey && e.key === 'f') {
+            e.preventDefault();
+            window.toggleFullscreen();
         }
     });
     
@@ -200,15 +212,39 @@
     
     // Global fullscreen toggle
     window.toggleFullscreen = function() {
-        if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen().catch(err => {
-                // Fullscreen error - silently handle
-                error_log("Fullscreen error: " + err.message);
-            });
-        } else {
-            if (document.exitFullscreen) {
-                document.exitFullscreen();
+        try {
+            if (!document.fullscreenElement && 
+                !document.webkitFullscreenElement && 
+                !document.mozFullScreenElement && 
+                !document.msFullscreenElement) {
+                
+                // Enter fullscreen
+                const element = document.documentElement;
+                if (element.requestFullscreen) {
+                    element.requestFullscreen();
+                } else if (element.webkitRequestFullscreen) {
+                    element.webkitRequestFullscreen();
+                } else if (element.mozRequestFullScreen) {
+                    element.mozRequestFullScreen();
+                } else if (element.msRequestFullscreen) {
+                    element.msRequestFullscreen();
+                }
+            } else {
+                // Exit fullscreen
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
             }
+        } catch (err) {
+            console.warn('Fullscreen error:', err.message);
+            // Fallback: show notification
+            window.showNotification('Fullscreen mode is not supported in this browser', 'warning');
         }
     };
     

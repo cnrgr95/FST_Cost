@@ -328,15 +328,15 @@ body:not(.dark-theme) .sidebar-submenu-link:hover {
     }
     
     .sidebar-user-info {
-        flex-direction: column;
-        text-align: center;
-        gap: var(--spacing-sm);
+        flex-direction: row;
+        text-align: left;
+        gap: var(--spacing-md);
     }
     
     .sidebar-user-details h4,
     .sidebar-user-details p {
-        white-space: normal;
-        text-align: center;
+        white-space: nowrap;
+        text-align: left;
     }
 }
 
@@ -372,6 +372,20 @@ body:not(.dark-theme) .sidebar-submenu-link:hover {
         width: 32px;
         height: 32px;
         font-size: var(--font-size-sm);
+    }
+    
+    .sidebar-user-info {
+        flex-direction: row;
+        text-align: left;
+        gap: var(--spacing-sm);
+    }
+    
+    .sidebar-user-details h4,
+    .sidebar-user-details p {
+        white-space: nowrap;
+        text-align: left;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 }
 

@@ -33,7 +33,7 @@ if(!isset($user)) {
             </button>
             
             <!-- Tam Ekran (Sadece Desktop) -->
-            <button class="topbar-btn fullscreen-toggle" onclick="toggleFullscreen()" title="<?php echo Language::get('fullscreen'); ?>" style="display: none;">
+            <button class="topbar-btn fullscreen-toggle" onclick="toggleFullscreen()" title="<?php echo Language::get('fullscreen'); ?>">
                 <ion-icon name="expand-outline"></ion-icon>
             </button>
             

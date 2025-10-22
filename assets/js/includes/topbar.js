@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.querySelector('.sidebar-overlay');
     const logoutBtn = document.querySelector('.logout-btn');
+    const fullscreenBtn = document.querySelector('.fullscreen-toggle');
+    const themeBtn = document.querySelector('.theme-toggle');
     
     // Scroll değişkenleri
     let scrollTimeout;
@@ -32,6 +34,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if(confirm(getTranslation('confirm_logout'))) {
                 window.location.href = '?logout=1';
             }
+        });
+    }
+    
+    // Tam ekran butonu
+    if(fullscreenBtn) {
+        fullscreenBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.toggleFullscreen();
+        });
+    }
+    
+    // Tema değiştirme butonu
+    if(themeBtn) {
+        themeBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            window.toggleTheme();
         });
     }
     
