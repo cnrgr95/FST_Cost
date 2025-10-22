@@ -1,4 +1,15 @@
 <?php
+// Security headers
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
+header('X-XSS-Protection: 1; mode=block');
+
+// Error handling
+require_once 'config/config.php';
+require_once 'config/error_handler.php';
+ErrorHandler::init(); // Config'den environment alır
+
+require_once 'config/utils.php';
 require_once 'config/session.php';
 require_once 'config/database.php';
 require_once 'config/language.php';
@@ -30,54 +41,71 @@ if(isset($_GET['timeout'])) {
 // Login işlemi
 $error = '';
 if($_POST && isset($_POST['username']) && isset($_POST['password'])) {
-    $username = trim($_POST['username']);
-    $password = $_POST['password'];
-    $remember = isset($_POST['remember']);
-    
-    if(!empty($username) && !empty($password)) {
-        $conn = $db->getConnection();
-        $stmt = $conn->prepare("SELECT id, username, password, full_name, language FROM users WHERE username = ?");
-        $stmt->execute([$username]);
-        $user = $stmt->fetch();
-        
-        if($user && password_verify($password, $user['password'])) {
-            $_SESSION['user_id'] = $user['id'];
-            $_SESSION['username'] = $user['username'];
-            $_SESSION['full_name'] = $user['full_name'];
-            $_SESSION['language'] = $user['language'];
+    // CSRF token kontrolü
+    if(!Utils::validateCSRFToken($_POST['csrf_token'] ?? '')) {
+        $error = Language::get('login_error');
+        ErrorHandler::log("Invalid CSRF token", ['ip' => Utils::getClientIP()]);
+    } else {
+        try {
+            $username = Utils::sanitizeInput($_POST['username'], 'username', 50);
+            $password = $_POST['password']; // Password sanitize edilmez
+            $remember = isset($_POST['remember']);
             
-            // Dil ayarını güncelle
-            if($selectedLanguage != $user['language']) {
-                $updateStmt = $conn->prepare("UPDATE users SET language = ? WHERE id = ?");
-                $updateStmt->execute([$selectedLanguage, $user['id']]);
-                $_SESSION['language'] = $selectedLanguage;
+            if(!empty($username) && !empty($password)) {
+                try {
+                    $conn = $db->getConnection();
+                    $stmt = $conn->prepare("SELECT id, username, password, full_name, language FROM users WHERE username = ?");
+                    $stmt->execute([$username]);
+                    $user = $stmt->fetch();
+                    
+                    if($user && password_verify($password, $user['password'])) {
+                        $_SESSION['user_id'] = $user['id'];
+                        $_SESSION['username'] = $user['username'];
+                        $_SESSION['full_name'] = $user['full_name'];
+                        $_SESSION['language'] = $user['language'];
+                        
+                        // Dil ayarını güncelle
+                        if($selectedLanguage != $user['language']) {
+                            $updateStmt = $conn->prepare("UPDATE users SET language = ? WHERE id = ?");
+                            $updateStmt->execute([$selectedLanguage, $user['id']]);
+                            $_SESSION['language'] = $selectedLanguage;
+                        }
+                        
+                        // Beni hatırla seçeneği
+                        if($remember) {
+                            $token = bin2hex(random_bytes(32));
+                            $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
+                            
+                            $sessionStmt = $conn->prepare("INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)");
+                            $sessionStmt->execute([$user['id'], $token, $expires]);
+                            
+                            setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/', '', true, true);
+                        }
+                        
+                        Utils::redirect('dashboard.php');
+                    } else {
+                        $error = Language::get('login_error');
+                        ErrorHandler::log("Failed login attempt", ['username' => $username, 'ip' => Utils::getClientIP()]);
+                    }
+                } catch(Exception $e) {
+                    ErrorHandler::log("Login error: " . $e->getMessage());
+                    $error = Language::get('login_error');
+                }
             }
-            
-            // Beni hatırla seçeneği
-            if($remember) {
-                $token = bin2hex(random_bytes(32));
-                $expires = date('Y-m-d H:i:s', strtotime('+30 days'));
-                
-                $sessionStmt = $conn->prepare("INSERT INTO sessions (user_id, session_token, expires_at) VALUES (?, ?, ?)");
-                $sessionStmt->execute([$user['id'], $token, $expires]);
-                
-                setcookie('remember_token', $token, time() + (30 * 24 * 60 * 60), '/');
-            }
-            
-            header('Location: dashboard.php');
-            exit();
-        } else {
+        } catch(InvalidArgumentException $e) {
+            ErrorHandler::log("Invalid input: " . $e->getMessage());
             $error = Language::get('login_error');
         }
-    } else {
-        $error = Language::get('login_error');
     }
 }
 
 // Dil değiştirme
 if(isset($_POST['change_language'])) {
-    $selectedLanguage = $_POST['language'];
-    Language::setLanguage($selectedLanguage);
+    // CSRF token kontrolü
+    if(isset($_POST['csrf_token']) && $_POST['csrf_token'] === $_SESSION['csrf_token']) {
+        $selectedLanguage = $_POST['language'];
+        Language::setLanguage($selectedLanguage);
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -111,6 +139,8 @@ if(isset($_POST['change_language'])) {
             <?php endif; ?>
             
             <form method="POST" class="login-form">
+                <input type="hidden" name="csrf_token" value="<?php echo Utils::generateCSRFToken(); ?>">
+                
                 <div class="form-group">
                     <label for="username"><?php echo Language::get('username'); ?>:</label>
                     <input type="text" id="username" name="username" required 

@@ -40,5 +40,22 @@
     "user_list": "User List",
     "add_user": "Add User",
     "system_settings": "System Settings",
-    "quick_stats": "Quick Statistics"
+    "quick_stats": "Quick Statistics",
+    "tour_list": "Tour List",
+    "definitions": "Definitions",
+    "cost": "Cost",
+    "tour": "Tour",
+    "currency": "Currency",
+    "country": "Country",
+    "region": "Region",
+    "department": "Department",
+    "language_settings": "Language",
+    "cash_settings": "Cash Settings",
+    "support": "Support",
+    "toggle_theme": "Toggle Theme",
+    "fullscreen": "Fullscreen",
+    "main_navigation": "Main Navigation",
+    "app_name": "FST Cost",
+    "user_avatar": "User avatar for %s",
+    "close_sidebar": "Close Sidebar"
 }

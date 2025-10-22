@@ -1,257 +1,219 @@
-// Sidebar JavaScript
+// Sidebar JavaScript - Optimized and Clean
 document.addEventListener('DOMContentLoaded', function() {
-    // Sidebar elemanlarını seç
+    // Sidebar elements
     const sidebar = document.querySelector('.sidebar');
     const sidebarOverlay = document.querySelector('.sidebar-overlay');
     const menuItems = document.querySelectorAll('.sidebar-menu-link');
-    const submenuItems = document.querySelectorAll('.sidebar-menu-item');
-    const logoutBtn = document.querySelector('.sidebar-logout');
+    const submenuLinks = document.querySelectorAll('.sidebar-submenu-link');
+    const mainContent = document.querySelector('.main-content');
     
-    // Çeviri fonksiyonu
-    function getTranslation(key) {
-        const translations = {
-            'en': {
-                'confirm_logout': 'Are you sure you want to logout?',
-                'session_timeout': 'Your session has expired due to inactivity. Please login again.'
-            },
-            'tr': {
-                'confirm_logout': 'Çıkış yapmak istediğinizden emin misiniz?',
-                'session_timeout': 'Oturumunuz hareketsizlik nedeniyle sona erdi. Lütfen tekrar giriş yapın.'
-            }
-        };
-        
-        const htmlLang = document.documentElement.lang || 'en';
-        return translations[htmlLang] ? translations[htmlLang][key] : key;
+    // Constants
+    const MOBILE_BREAKPOINT = 768;
+    const ANIMATION_DURATION = 300;
+    
+    // Utility functions
+    function isMobile() {
+        return window.innerWidth <= MOBILE_BREAKPOINT;
     }
     
-    // Sidebar açma/kapama fonksiyonu
-    function toggleSidebar() {
-        if(sidebar) {
-            sidebar.classList.toggle('open');
-            if(sidebarOverlay) {
-                sidebarOverlay.classList.toggle('open');
+    function closeAllSubmenus() {
+        document.querySelectorAll('.sidebar-submenu').forEach(menu => {
+            menu.classList.remove('open');
+            const parentItem = menu.closest('.sidebar-menu-item');
+            if(parentItem) {
+                parentItem.classList.remove('open');
             }
-            document.body.classList.toggle('sidebar-open');
+        });
+    }
+    
+    function setActiveMenuItem(activeItem) {
+        menuItems.forEach(menuItem => {
+            menuItem.classList.remove('active');
+        });
+        if(activeItem) {
+            activeItem.classList.add('active');
         }
     }
     
-    // Sidebar kapatma fonksiyonu
-    function closeSidebar() {
-        if(sidebar) {
-            sidebar.classList.remove('open');
-            if(sidebarOverlay) {
-                sidebarOverlay.classList.remove('open');
-            }
+    function updateMainContentMargin() {
+        if(!mainContent) return;
+        
+        const isOpen = sidebar && sidebar.classList.contains('open');
+        
+        if(isOpen) {
+            mainContent.classList.remove('sidebar-closed');
+            document.body.classList.add('sidebar-open');
+        } else {
+            mainContent.classList.add('sidebar-closed');
             document.body.classList.remove('sidebar-open');
         }
     }
     
-    // Menu item tıklama olayları
+    function closeSidebarOnMobile() {
+        if(isMobile() && window.sidebarControl) {
+            window.sidebarControl.close();
+        }
+    }
+    
+    // Menu item click handlers
     menuItems.forEach(item => {
         item.addEventListener('click', function(e) {
             const submenu = this.nextElementSibling;
             
-            // Eğer alt menü varsa
+            // Check if it has a submenu
             if(submenu && submenu.classList.contains('sidebar-submenu')) {
                 e.preventDefault();
-                submenu.classList.toggle('open');
                 
-                // Diğer alt menüleri kapat
-                document.querySelectorAll('.sidebar-submenu').forEach(menu => {
-                    if(menu !== submenu) {
-                        menu.classList.remove('open');
-                    }
-                });
-            } else {
-                // Normal link - sidebar'ı kapat (mobilde)
-                if(window.innerWidth <= 768) {
-                    closeSidebar();
+                // Toggle submenu
+                const isOpen = submenu.classList.contains('open');
+                closeAllSubmenus();
+                
+                if(!isOpen) {
+                    submenu.classList.add('open');
+                    this.parentElement.classList.add('open');
                 }
+                
+                // Update dropdown icon
+                const dropdownIcon = this.querySelector('.sidebar-dropdown-icon');
+                if(dropdownIcon) {
+                    dropdownIcon.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+                }
+            } else {
+                // Regular link - close sidebar on mobile
+                closeSidebarOnMobile();
             }
             
-            // Aktif menü işaretleme
-            menuItems.forEach(menuItem => {
-                menuItem.classList.remove('active');
-            });
-            this.classList.add('active');
+            // Set active state
+            setActiveMenuItem(this);
         });
         
-        // Hover efekti
-        item.addEventListener('mouseenter', function() {
-            this.style.backgroundColor = '#34495e';
-        });
-        
-        item.addEventListener('mouseleave', function() {
-            if(!this.classList.contains('active')) {
-                this.style.backgroundColor = '';
+        // Keyboard navigation support
+        item.addEventListener('keydown', function(e) {
+            if(e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
             }
+        });
+        
+        // Focus management
+        item.addEventListener('focus', function() {
+            this.style.outline = '2px solid var(--accent-color)';
+            this.style.outlineOffset = '-2px';
+        });
+        
+        item.addEventListener('blur', function() {
+            this.style.outline = '';
+            this.style.outlineOffset = '';
         });
     });
     
-    // Alt menü linklerine tıklama
-    const submenuLinks = document.querySelectorAll('.sidebar-submenu-link');
+    // Submenu link click handlers
     submenuLinks.forEach(link => {
         link.addEventListener('click', function() {
-            // Mobilde sidebar'ı kapat
-            if(window.innerWidth <= 768) {
-                closeSidebar();
-            }
+            // Close sidebar on mobile
+            closeSidebarOnMobile();
             
-            // Alt menüyü kapat
+            // Close submenu
             const submenu = this.closest('.sidebar-submenu');
             if(submenu) {
                 submenu.classList.remove('open');
+                const parentItem = submenu.closest('.sidebar-menu-item');
+                if(parentItem) {
+                    parentItem.classList.remove('open');
+                }
             }
-        });
-    });
-    
-    // Çıkış butonu
-    if(logoutBtn) {
-        logoutBtn.addEventListener('click', function(e) {
-            e.preventDefault();
             
-            if(confirm(getTranslation('confirm_logout'))) {
-                window.location.href = '?logout=1';
+            // Set active state
+            setActiveMenuItem(this);
+        });
+        
+        // Keyboard navigation
+        link.addEventListener('keydown', function(e) {
+            if(e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                this.click();
+            }
+        });
+    });
+    
+    // Overlay click handler
+    if(sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', function() {
+            if(window.sidebarControl) {
+                window.sidebarControl.close();
+            }
+        });
+        
+        // Keyboard support for overlay
+        sidebarOverlay.addEventListener('keydown', function(e) {
+            if(e.key === 'Escape' && window.sidebarControl) {
+                window.sidebarControl.close();
             }
         });
     }
     
-    // Overlay tıklama ile kapatma
-    if(sidebarOverlay) {
-        sidebarOverlay.addEventListener('click', closeSidebar);
-    }
-    
-    // Klavye kısayolları
-    document.addEventListener('keydown', function(e) {
-        // Escape ile sidebar kapat
-        if(e.key === 'Escape') {
-            closeSidebar();
-        }
-        
-        // Ctrl + M ile sidebar aç/kapat
-        if(e.ctrlKey && e.key === 'm') {
-            e.preventDefault();
-            toggleSidebar();
-        }
-    });
-    
-    // Responsive kontrol
-    function handleResize() {
-        if(window.innerWidth > 768) {
-            // Desktop - sidebar'ı açık tut
-            if(sidebar) {
-                sidebar.classList.add('open');
-                document.body.classList.add('sidebar-open');
-            }
-        } else {
-            // Mobile - sidebar'ı kapat
-            closeSidebar();
-        }
-    }
-    
-    window.addEventListener('resize', handleResize);
-    
-    // Sayfa yüklendiğinde kontrol et
-    handleResize();
-    
-    // Kullanıcı avatarı oluştur
+    // User avatar initialization
     const userAvatar = document.querySelector('.sidebar-user-avatar');
     if(userAvatar) {
         const userName = userAvatar.getAttribute('data-name') || 'U';
         userAvatar.textContent = userName.charAt(0).toUpperCase();
+        
+        // Add accessibility attributes
+        userAvatar.setAttribute('aria-label', `User avatar for ${userName}`);
+        userAvatar.setAttribute('role', 'img');
     }
     
-    // Sidebar scroll efekti
+    // Mutation observer for sidebar state changes
     if(sidebar) {
-        let lastScrollTop = 0;
-        sidebar.addEventListener('scroll', function() {
-            const scrollTop = this.scrollTop;
-            
-            // Scroll yönüne göre header'ı gizle/göster
-            const header = this.querySelector('.sidebar-header');
-            if(header) {
-                if(scrollTop > lastScrollTop && scrollTop > 50) {
-                    header.style.transform = 'translateY(-100%)';
-                } else {
-                    header.style.transform = 'translateY(0)';
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if(mutation.attributeName === 'class') {
+                    updateMainContentMargin();
                 }
-            }
-            
-            lastScrollTop = scrollTop;
+            });
+        });
+        
+        observer.observe(sidebar, { 
+            attributes: true,
+            attributeFilter: ['class']
         });
     }
     
-    // Menu item animasyonları
-    menuItems.forEach((item, index) => {
-        item.style.animationDelay = `${index * 0.1}s`;
-    });
-    
-    // Sidebar açıldığında animasyon
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if(mutation.attributeName === 'class') {
-                if(sidebar.classList.contains('open')) {
-                    // Sidebar açıldığında
-                    menuItems.forEach((item, index) => {
-                        setTimeout(() => {
-                            item.style.opacity = '1';
-                            item.style.transform = 'translateX(0)';
-                        }, index * 50);
-                    });
-                } else {
-                    // Sidebar kapandığında
-                    menuItems.forEach(item => {
-                        item.style.opacity = '0';
-                        item.style.transform = 'translateX(-20px)';
-                    });
+    // Window resize handler
+    let resizeTimeout;
+    window.addEventListener('resize', function() {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+            updateMainContentMargin();
+            
+            // Close sidebar on mobile when resizing to desktop
+            if(!isMobile() && sidebar && sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+                if(sidebarOverlay) {
+                    sidebarOverlay.classList.remove('open');
                 }
             }
-        });
+        }, 100);
     });
     
-    if(sidebar) {
-        observer.observe(sidebar, { attributes: true });
-    }
+    // Escape key handler
+    document.addEventListener('keydown', function(e) {
+        if(e.key === 'Escape' && isMobile() && sidebar && sidebar.classList.contains('open')) {
+            if(window.sidebarControl) {
+                window.sidebarControl.close();
+            }
+        }
+    });
+    
+    // Initial state update
+    updateMainContentMargin();
+    
+    // Performance optimization: Use passive event listeners where possible
+    const passiveEvents = ['scroll', 'touchstart', 'touchmove'];
+    passiveEvents.forEach(eventType => {
+        document.addEventListener(eventType, function() {}, { passive: true });
+    });
 });
 
-// CSS ekleme
-const style = document.createElement('style');
-style.textContent = `
-    body.sidebar-open {
-        overflow: hidden;
-    }
-    
-    .sidebar {
-        transition: transform 0.3s ease;
-    }
-    
-    .sidebar-header {
-        transition: transform 0.3s ease;
-    }
-    
-    .sidebar-menu-link {
-        opacity: 0;
-        transform: translateX(-20px);
-        transition: all 0.3s ease;
-    }
-    
-    .sidebar-menu-link:nth-child(1) { animation-delay: 0.1s; }
-    .sidebar-menu-link:nth-child(2) { animation-delay: 0.2s; }
-    .sidebar-menu-link:nth-child(3) { animation-delay: 0.3s; }
-    .sidebar-menu-link:nth-child(4) { animation-delay: 0.4s; }
-    .sidebar-menu-link:nth-child(5) { animation-delay: 0.5s; }
-    
-    @media (max-width: 768px) {
-        .sidebar {
-            width: 100%;
-            max-width: 300px;
-        }
-    }
-    
-    @media (min-width: 769px) {
-        .sidebar {
-            transform: translateX(0);
-        }
-    }
-`;
-document.head.appendChild(style);
+// Sidebar specific functionality
+window.sidebarControl = window.sidebarControl || {};

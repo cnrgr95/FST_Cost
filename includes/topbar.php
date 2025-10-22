@@ -13,27 +13,34 @@ if(!isset($user)) {
 <header class="topbar">
     <div class="topbar-content">
         <div class="topbar-left">
+            <button class="topbar-menu-toggle" aria-label="Menu">
+                <ion-icon name="menu-outline"></ion-icon>
+            </button>
         </div>
         
         <div class="topbar-right">
-            <div class="topbar-user-info">
-                <span class="welcome-text">
-                    <?php echo Language::get('welcome'); ?>, 
-                    <strong><?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?></strong>
-                </span>
-                <div class="user-avatar" data-name="<?php echo htmlspecialchars($user['full_name'] ?: $user['username']); ?>">
-                    <?php echo strtoupper(substr($user['full_name'] ?: $user['username'], 0, 1)); ?>
-                </div>
+            <!-- Dil Seçici -->
+            <div class="topbar-language">
+                <select class="language-selector" onchange="changeLanguage(this.value)">
+                    <option value="en" <?php echo $selectedLanguage == 'en' ? 'selected' : ''; ?>>EN</option>
+                    <option value="tr" <?php echo $selectedLanguage == 'tr' ? 'selected' : ''; ?>>TR</option>
+                </select>
             </div>
             
-            <div class="topbar-actions">
-                <button class="topbar-menu-toggle" aria-label="Menu">
-                    ☰
-                </button>
-                <a href="?logout=1" class="topbar-btn logout-btn">
-                    <?php echo Language::get('logout'); ?>
-                </a>
-            </div>
+            <!-- Karanlık/Aydınlık Mod -->
+            <button class="topbar-btn theme-toggle" onclick="toggleTheme()" title="<?php echo Language::get('toggle_theme'); ?>">
+                <ion-icon name="moon-outline" class="theme-icon"></ion-icon>
+            </button>
+            
+            <!-- Tam Ekran (Sadece Desktop) -->
+            <button class="topbar-btn fullscreen-toggle" onclick="toggleFullscreen()" title="<?php echo Language::get('fullscreen'); ?>" style="display: none;">
+                <ion-icon name="expand-outline"></ion-icon>
+            </button>
+            
+            <!-- Çıkış Yap -->
+            <button class="topbar-btn logout-btn" onclick="logout()" title="<?php echo Language::get('logout'); ?>">
+                <ion-icon name="log-out-outline"></ion-icon>
+            </button>
         </div>
     </div>
 </header>

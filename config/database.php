@@ -1,9 +1,6 @@
 <?php
 // PostgreSQL veritabanı bağlantı ayarları
-define('DB_HOST', 'localhost');
-define('DB_USER', 'postgres');
-define('DB_PASS', '123456789');
-define('DB_NAME', 'fst_cost');
+require_once 'config.php';
 
 class Database {
     private $connection;
@@ -15,33 +12,37 @@ class Database {
     private function connect() {
         try {
             // Veritabanı bağlantısı
-            $dsn = "pgsql:host=" . DB_HOST . ";port=5432;dbname=" . DB_NAME;
-            $this->connection = new PDO($dsn, DB_USER, DB_PASS);
+            $dsn = Config::getDatabaseDSN();
+            $this->connection = new PDO($dsn, Config::DB_USER, Config::DB_PASS);
             $this->connection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             $this->connection->setAttribute(PDO::ATTR_DEFAULT_FETCH_MODE, PDO::FETCH_ASSOC);
         } catch(PDOException $e) {
+            ErrorHandler::log("Database connection error: " . $e->getMessage());
             die("Veritabanı bağlantı hatası: " . $e->getMessage());
         }
     }
     
     public function getConnection() {
+        if(!$this->connection) {
+            $this->connect();
+        }
         return $this->connection;
     }
     
     public function createDatabase() {
         try {
             // Önce veritabanı olmadan bağlan
-            $dsn = "pgsql:host=" . DB_HOST . ";port=5432";
-            $conn = new PDO($dsn, DB_USER, DB_PASS);
+            $dsn = "pgsql:host=" . Config::DB_HOST . ";port=5432";
+            $conn = new PDO($dsn, Config::DB_USER, Config::DB_PASS);
             $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
             
             // Veritabanının var olup olmadığını kontrol et
             $checkDb = $conn->prepare("SELECT 1 FROM pg_database WHERE datname = ?");
-            $checkDb->execute([DB_NAME]);
+            $checkDb->execute([Config::DB_NAME]);
             
             if($checkDb->rowCount() == 0) {
                 // Veritabanını oluştur
-                $sql = "CREATE DATABASE " . DB_NAME;
+                $sql = "CREATE DATABASE " . Config::DB_NAME;
                 $conn->exec($sql);
             }
             
@@ -53,6 +54,7 @@ class Database {
             
             return true;
         } catch(PDOException $e) {
+            ErrorHandler::log("Database creation error: " . $e->getMessage());
             die("Veritabanı oluşturma hatası: " . $e->getMessage());
         }
     }

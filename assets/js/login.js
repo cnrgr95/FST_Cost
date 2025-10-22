@@ -45,22 +45,33 @@ document.addEventListener('DOMContentLoaded', function() {
         langSelect.name = 'language';
         langSelect.value = selectedLang;
         
+        // CSRF token ekle
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = 'csrf_token';
+        csrfInput.value = document.querySelector('input[name="csrf_token"]').value;
+        
         form.appendChild(languageInput);
         form.appendChild(langSelect);
+        form.appendChild(csrfInput);
         document.body.appendChild(form);
         form.submit();
     };
     
     // Form gönderimi animasyonu
     form.addEventListener('submit', function(e) {
-        // Loading animasyonu
-        loginButton.innerHTML = '<span class="loading-spinner"></span> ' + getTranslation('logging_in');
+        // Loading animasyonu - güvenli DOM manipülasyonu
+        const spinner = document.createElement('span');
+        spinner.className = 'loading-spinner';
+        loginButton.textContent = '';
+        loginButton.appendChild(spinner);
+        loginButton.appendChild(document.createTextNode(' ' + getTranslation('logging_in')));
         loginButton.disabled = true;
         
         // Eğer hata varsa animasyonu geri al
         setTimeout(function() {
             if(document.querySelector('.error-message')) {
-                loginButton.innerHTML = getTranslation('login');
+                loginButton.textContent = getTranslation('login');
                 loginButton.disabled = false;
             }
         }, 2000);

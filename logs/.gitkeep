@@ -1,0 +1,3 @@
+# Logs dizini
+# Bu dizin uygulama loglarını içerir
+# .gitignore dosyasında logs/*.log şeklinde ignore edilmelidir

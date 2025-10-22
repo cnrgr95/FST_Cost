@@ -40,5 +40,22 @@
     "user_list": "Kullanıcı Listesi",
     "add_user": "Kullanıcı Ekle",
     "system_settings": "Sistem Ayarları",
-    "quick_stats": "Hızlı İstatistikler"
+    "quick_stats": "Hızlı İstatistikler",
+    "tour_list": "Tur Listesi",
+    "definitions": "Tanımlamalar",
+    "cost": "Maliyet",
+    "tour": "Tour",
+    "currency": "Döviz",
+    "country": "Ülke",
+    "region": "Bölge",
+    "department": "Departman",
+    "language_settings": "Dil",
+    "cash_settings": "Cash Ayarları",
+    "support": "Destek",
+    "toggle_theme": "Tema Değiştir",
+    "fullscreen": "Tam Ekran",
+    "main_navigation": "Ana Navigasyon",
+    "app_name": "FST Cost",
+    "user_avatar": "%s için kullanıcı avatarı",
+    "close_sidebar": "Kenar Çubuğunu Kapat"
 }
